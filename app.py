@@ -36,13 +36,11 @@ if not coins:
     st.stop()
 
 # --- SECCIÓN 1: SENTIMIENTO DEL MERCADO (GLOBAL) ---
-# Esto afecta a TODAS las monedas
 st.subheader("🌡️ Contexto de Mercado (Global)")
 
 c_fg1, c_fg2 = st.columns([1, 4])
 
 with c_fg1:
-    # Lógica de colores semáforo
     if fg_value < 25:
         color_fg = "red"
         emoji_fg = "🟢 Oportunidad"
@@ -60,8 +58,8 @@ with c_fg2:
     st.info(f"""
     **¿Cómo afecta esto a mis monedas?**
     * El índice actual es **{fg_value}/100 ({fg_label})**.
-    * Cuando Bitcoin tiene 'Miedo' (Bajo 25), **Solana y Chainlink** suelen ofrecer descuentos aún mayores (pero con más riesgo).
-    * Cuando hay 'Euforia' (Sobre 75), las Altcoins suelen subir explosivamente antes de corregir.
+    * Cuando Bitcoin tiene 'Miedo' (Bajo 25), **Solana y Chainlink** suelen ofrecer descuentos aún mayores.
+    * Cuando hay 'Euforia' (Sobre 75), vigila posibles correcciones.
     """)
 
 st.markdown("---")
@@ -69,8 +67,9 @@ st.markdown("---")
 # --- SECCIÓN 2: ANÁLISIS POR ACTIVO (PESTAÑAS) ---
 tabs = st.tabs(["🟠 Bitcoin (BTC)", "🔵 Ethereum (ETH)", "🟣 Solana (SOL)", "Ez Chainlink (LINK)"])
 
+# AQUÍ ESTABA EL ERROR: Ahora usamos 'coins' correctamente
 for i, tab in enumerate(tabs):
-    coin = data[i]
+    coin = coins[i]  # <--- CORREGIDO
     with tab:
         # CABECERA
         c1, c2, c3, c4 = st.columns(4)
@@ -104,7 +103,10 @@ for i, tab in enumerate(tabs):
         # CICLO Y ATH
         st.subheader("📉 Análisis de Ciclo (ATH)")
         ath_drop = coin['ath_change_percentage']
-        ath_date = datetime.strptime(coin['ath_date'], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%d/%m/%Y")
+        try:
+            ath_date = datetime.strptime(coin['ath_date'], "%Y-%m-%dT%H:%M:%S.%fZ").strftime("%d/%m/%Y")
+        except:
+            ath_date = "N/A"
         
         ac1, ac2 = st.columns([1, 2])
         ac1.metric("Caída desde Máximos", f"{ath_drop:.2f}%", delta_color="inverse")
@@ -112,17 +114,16 @@ for i, tab in enumerate(tabs):
         with ac2:
             st.write(f"Máximo histórico: **{coin['ath']:,.2f} €** ({ath_date})")
             
-            # Análisis contextualizado con el Miedo/Codicia
             if ath_drop < -70: 
-                st.success(f"✅ **Oportunidad Agresiva:** Descuento masivo (>70%). Si el índice de Miedo es bajo, es zona de compra fuerte.")
+                st.success(f"✅ **Oportunidad Agresiva:** Descuento masivo (>70%).")
             elif ath_drop < -40: 
                 st.success("⚖️ **Zona de Acumulación:** Buen punto de entrada DCA.")
             elif ath_drop > -20: 
-                st.warning("⛔ **Cerca de Máximos:** Precaución. Si hay Euforia, considera tomar beneficios parciales.")
+                st.warning("⛔ **Cerca de Máximos:** Precaución.")
 
 st.markdown("---")
 if st.button('🔄 Actualizar Datos'):
     st.rerun()
     
-    
+
 
